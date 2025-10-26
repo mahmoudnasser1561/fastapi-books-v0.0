@@ -5,6 +5,7 @@ from sqlalchemy import select, update, delete
 from .database import engine, AsyncSessionLocal, AsyncSession, get_db
 from .models import Base, Book, seed_data
 from .schemas import BookRequest
+import logging
 import socket
 import logging
 
@@ -69,13 +70,30 @@ async def startup():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     async with AsyncSessionLocal() as db:
+    
         await seed_data(db)
+
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[logging.StreamHandler()]
+)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[logging.StreamHandler()]
+)
+
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
+    logger.info(f"Received request: {request.method} {request.url}")
     response = await call_next(request)
     response.headers["X-Served-By"] = hostname
-    logging.info(f"Served {request.url.path} from {hostname}")
+    logger.info(f"Served {request.url.path} from {hostname} with status {response.status_code}")
     return response
 
 @app.get("/")

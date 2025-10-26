@@ -58,6 +58,12 @@ services:
     command: |
       - "while true; do pg_dump -U $$  POSTGRES_USER -h db -d   $$POSTGRES_DB > /backups/backup_$$(date +%Y%m%d_%H%M%S).sql; sleep 3600; done"  # Backup every hour
 
+  loadtest:
+    image: jordi/ab
+    depends_on:
+      - api
+    command: ["-n", "200", "-c", "20", "http://lb/"]
+
 
 volumes:
   postgres_data:
