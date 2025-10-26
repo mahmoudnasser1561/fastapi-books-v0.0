@@ -4,7 +4,7 @@ import json
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 RESULTS_DIR = BASE_DIR
-OUTPUT_JSON = os.path.join(BASE_DIR, "ab_summary.json")
+OUTPUT_JSON = os.path.join(RESULTS_DIR, "ab_summary.json") 
 
 def parse_ab_output(text):
     data = {}
@@ -25,9 +25,11 @@ def main():
     summaries = []
     for file in os.listdir(RESULTS_DIR):
         if file.endswith(".txt"):
-            with open(os.path.join(RESULTS_DIR, file)) as f:
+            file_path = os.path.join(RESULTS_DIR, file)
+            with open(file_path) as f:
                 text = f.read()
-                summary = parse_ab_output(text)
+            summary = parse_ab_output(text)
+            if summary:
                 summary["file"] = file
                 summaries.append(summary)
 
