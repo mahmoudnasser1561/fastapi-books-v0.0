@@ -69,6 +69,12 @@ services:
         sleep 10 && \
         ab -n 200 -c 20 http://lb/ > /results/benchmark_$(date +%Y%m%d_%H%M%S).txt
       "
+  metrics:
+    image: python:3.12
+    working_dir: /app
+    volumes:
+      - ./ab_results:/app/ab_results
+    command: ["python", "ab_results/parser.py"]
 
 
 volumes:
