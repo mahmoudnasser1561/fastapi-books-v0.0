@@ -1,10 +1,14 @@
-from fastapi import FastAPI, Path, Query, HTTPException, Depends
+from fastapi import FastAPI, Path, Query, HTTPException, Depends, Request
 from starlette import status
+from fastapi.responses import FileResponse
 from sqlalchemy import select, update, delete
 from .database import engine, AsyncSessionLocal, AsyncSession, get_db
 from .models import Base, Book, seed_data
 from .schemas import BookRequest
+import socket
+import logging
 
+hostname = socket.gethostname()
 app = FastAPI()
 
 @app.get("/books", status_code=status.HTTP_200_OK)
@@ -66,3 +70,18 @@ async def startup():
         await conn.run_sync(Base.metadata.create_all)
     async with AsyncSessionLocal() as db:
         await seed_data(db)
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    response = await call_next(request)
+    logging.info(f"Served {request.url.path} from {hostname}")
+    return response
+
+@app.get("/")
+def home():
+    return {"message": f"Hello from {hostname}"}
+
+
+@app.get("/favicon.ico")
+async def favicon():
+    return FileResponse("static/favicon.ico") 
