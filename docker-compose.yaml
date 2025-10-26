@@ -61,8 +61,14 @@ services:
   loadtest:
     image: jordi/ab
     depends_on:
-      - api
-    command: ["-n", "200", "-c", "20", "http://lb/"]
+      - lb
+    volumes:
+      - ./ab_results:/results
+    entrypoint: >
+      /bin/sh -c "
+        sleep 10 && \
+        ab -n 200 -c 20 http://lb/ > /results/benchmark_$(date +%Y%m%d_%H%M%S).txt
+      "
 
 
 volumes:
