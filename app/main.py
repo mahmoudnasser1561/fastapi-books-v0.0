@@ -74,6 +74,7 @@ async def startup():
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     response = await call_next(request)
+    response.headers["X-Served-By"] = hostname
     logging.info(f"Served {request.url.path} from {hostname}")
     return response
 
