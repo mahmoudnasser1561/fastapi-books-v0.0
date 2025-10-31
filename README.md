@@ -17,7 +17,7 @@ FastAPI Books API is a modern, containerized project for managing books — orig
 - Customized log parser and metrics exporter
 - Monitoring and visualization using Prometheus + Grafana
 
- ## Architecture Diagram
+ ## Architecture Diagrams
  <img width="1662" height="418" alt="p01 drawio(1)" src="https://github.com/user-attachments/assets/618d1ad1-a777-4c07-acaf-63b8f78f4f05" />
  
 ## Components
@@ -83,5 +83,47 @@ python3 lb_test.py
 <img width="1303" height="318" alt="image" src="https://github.com/user-attachments/assets/c2536623-4464-402d-aed1-5f32a55b78f8" />
 <img width="1286" height="162" alt="image" src="https://github.com/user-attachments/assets/81f03df3-d549-41f2-b6bf-123932d5b114" />
 
-## Grafana
+## Database Backups
+Automated backups are taken hourly 
+```
+/backups/backup_YYYYMMDD_HHMMSS.sql
+```
+You can restore any snapshot using:
+```
+psql -U postgres -d books -f backup_<timestamp>.sql
+```
+## Observability stack
+<img width="1327" height="965" alt="p01 drawio(4)" src="https://github.com/user-attachments/assets/6a947bb1-46ec-47a6-ba90-fbbf6ea7c2b0" />
+
+#### Load Testing
+Simulate 200 requests with concurrency of 20:
+```
+ab -n 200 -c 20 http://localhost:8080/
+```
+Requests are routed through the Nginx load balancer, which distributes them evenly across multiple api replicas.
+Results are stored in ```ab_results/benchmark_<timestamp>.txt ```
+
+#### Result Storage
+Benchmark outputs are saved in:
+```
+ab_results/benchmark_<timestamp>.txt
+```
+These raw results capture latency, throughput, and error data for each test run.
+
+#### Metrics Parsing
+The metrics service periodically parses the raw benchmark files and generates a structured JSON summary:
+```
+ab_results/ab_summary.json
+```
+This transformation makes metrics machine-readable and ready for monitoring systems.
+
+#### Metrics Exporter
+The ``` ab_exporter``` container reads the parsed JSON summaries and exposes them as **Prometheus metrics** on port 9100.
+
+#### Prometheus Integration
+Prometheus scrapes data from the Metrics Exporter at regular intervals, building a time-series database of test results.
+
+#### Visualization with Grafana
+Grafana queries Prometheus to present real-time dashboards — including request rate, latency, and error metrics
+
 <img width="1054" height="754" alt="image" src="https://github.com/user-attachments/assets/e01303a2-80fa-4d38-8f24-98de296d605b" />
